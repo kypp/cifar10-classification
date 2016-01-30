@@ -1,0 +1,3 @@
+[submodule "libs/Lasagne"]
+	path = libs/Lasagne
+	url = https://github.com/Lasagne/Lasagne.git
