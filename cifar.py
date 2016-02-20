@@ -25,41 +25,32 @@ def load_cifar_data():
     y_train, y_val = y_train[:-10000], y_train[-10000:]
     return X_train, y_train, X_val, y_val, X_test, y_test
 
-def build_cnn(input_var=None):
-    # Input layer, as usual:
+def build_cnn(input_var=None):    
     network = lasagne.layers.InputLayer(shape=(None, 3, 32, 32),
                                         input_var=input_var)
-    # This time we do not apply input dropout, as it tends to work less well
-    # for convolutional layers.
 
-    # Convolutional layer with 32 kernels of size 5x5. Strided and padded
-    # convolutions are supported as well; see the docstring.
     network = lasagne.layers.Conv2DLayer(
-            network, num_filters=50, filter_size=(5, 5),
+            network, num_filters=192, filter_size=5,
             nonlinearity=lasagne.nonlinearities.rectify,
             W=lasagne.init.GlorotUniform())
 
-    # Max-pooling layer of factor 2 in both dimensions:
     network = lasagne.layers.MaxPool2DLayer(network, pool_size=(2, 2))
 
-    # Another convolution with 32 5x5 kernels, and another 2x2 pooling:
     network = lasagne.layers.Conv2DLayer(
-            network, num_filters=50, filter_size=(5, 5),
+            network, num_filters=192, filter_size=5,
             nonlinearity=lasagne.nonlinearities.rectify)
     network = lasagne.layers.MaxPool2DLayer(network, pool_size=(2, 2))
 
-    # A fully-connected layer of 256 units with 50% dropout on its inputs:
     network = lasagne.layers.DenseLayer(
             lasagne.layers.dropout(network, p=.5),
-            num_units=2000,
+            num_units=1000,
             nonlinearity=lasagne.nonlinearities.rectify)
 
     network = lasagne.layers.DenseLayer(
             lasagne.layers.dropout(network, p=.5),
-            num_units=2000,
+            num_units=1000,
             nonlinearity=lasagne.nonlinearities.rectify)
 
-    # And, finally, the 10-unit output layer with 50% dropout on its inputs:
     network = lasagne.layers.DenseLayer(
             lasagne.layers.dropout(network, p=.5),
             num_units=10,
@@ -67,12 +58,14 @@ def build_cnn(input_var=None):
 
     return network
 
+
 def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
     assert len(inputs) == len(targets)
     if shuffle:
         indices = np.arange(len(inputs))
         np.random.shuffle(indices)
     for start_idx in range(0, len(inputs) - batchsize + 1, batchsize):
+        #print("batch id", start_idx, "of", len(inputs))
         if shuffle:
             excerpt = indices[start_idx:start_idx + batchsize]
         else:
