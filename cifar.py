@@ -25,31 +25,49 @@ def load_cifar_data():
     y_train, y_val = y_train[:-10000], y_train[-10000:]
     return X_train, y_train, X_val, y_val, X_test, y_test
 
-def build_cnn(input_var=None):    
+def build_cnn(input_var=None):
+    network = lasagne.layers.InputLayer(shape=(None, 3, 32, 32), input_var=input_var)
+    network = lasagne.layers.Conv2DLayer(network, num_filters=96, filter_size=3, W=lasagne.init.GlorotUniform(), nonlinearity=lasagne.nonlinearities.rectify)
+    network = lasagne.layers.Conv2DLayer(network, num_filters=96, filter_size=3, stride=2, nonlinearity=lasagne.nonlinearities.rectify)
+    network = lasagne.layers.Conv2DLayer(network, num_filters=196, filter_size=3, nonlinearity=lasagne.nonlinearities.rectify)
+    network = lasagne.layers.Conv2DLayer(network, num_filters=196, filter_size=3, stride=2, nonlinearity=lasagne.nonlinearities.rectify)
+    network = lasagne.layers.Conv2DLayer(network, num_filters=196, filter_size=3, nonlinearity=lasagne.nonlinearities.rectify)
+    network = lasagne.layers.Conv2DLayer(network, num_filters=196, filter_size=1, nonlinearity=lasagne.nonlinearities.rectify)
+    network = lasagne.layers.Conv2DLayer(network, num_filters=10, filter_size=1, nonlinearity=lasagne.nonlinearities.rectify)
+    network = lasagne.layers.GlobalPoolLayer(network)
+    network = lasagne.layers.DenseLayer(network, num_units=10, nonlinearity=lasagne.nonlinearities.softmax)
+    return network
+
+def build_cnn2(input_var=None):    
     network = lasagne.layers.InputLayer(shape=(None, 3, 32, 32),
                                         input_var=input_var)
 
     network = lasagne.layers.Conv2DLayer(
-            network, num_filters=192, filter_size=5,
+            network, num_filters=32, filter_size=5, pad=2,
             nonlinearity=lasagne.nonlinearities.rectify,
             W=lasagne.init.GlorotUniform())
 
-    network = lasagne.layers.MaxPool2DLayer(network, pool_size=(2, 2))
+    network = lasagne.layers.MaxPool2DLayer(network, pool_size=3, stride=2)
 
     network = lasagne.layers.Conv2DLayer(
-            network, num_filters=192, filter_size=5,
+            network, num_filters=32, filter_size=5, pad=2,
             nonlinearity=lasagne.nonlinearities.rectify)
-    network = lasagne.layers.MaxPool2DLayer(network, pool_size=(2, 2))
+    network = lasagne.layers.Pool2DLayer(network, pool_size=3, stride=2, mode='average_inc_pad')
+    #network = lasagne.layers.Pool2DLayer(network, pool_size=3, stride=2, mode='average_inc_pad')
+
+    network = lasagne.layers.Conv2DLayer(
+            network, num_filters=64, filter_size=5, pad=2,
+            nonlinearity=lasagne.nonlinearities.rectify)
+    network = lasagne.layers.Pool2DLayer(network, pool_size=2, stride=2, mode='average_inc_pad')
+
+#    network = lasagne.layers.Conv2DLayer(
+#            network, num_filters=64, filter_size=5,
+#            nonlinearity=lasagne.nonlinearities.rectify)
+#    network = lasagne.layers.Pool2DLayer(network, pool_size=3, stride=2, mode='average_inc_pad')
 
     network = lasagne.layers.DenseLayer(
-            lasagne.layers.dropout(network, p=.5),
-            num_units=1000,
-            nonlinearity=lasagne.nonlinearities.rectify)
-
-    network = lasagne.layers.DenseLayer(
-            lasagne.layers.dropout(network, p=.5),
-            num_units=1000,
-            nonlinearity=lasagne.nonlinearities.rectify)
+            network,
+            num_units=64)
 
     network = lasagne.layers.DenseLayer(
             lasagne.layers.dropout(network, p=.5),
